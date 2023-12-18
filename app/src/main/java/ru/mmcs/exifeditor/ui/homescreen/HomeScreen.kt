@@ -9,11 +9,16 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
@@ -38,9 +43,11 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,10 +74,13 @@ fun HomeScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
+    val currentContext = LocalContext.current
+
     val imgProviderLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia()) { target ->
             target?.let {
                 viewModel.onImageChosen(it)
+                viewModel.updateExifData(currentContext.contentResolver.openInputStream(it))
             }
         }
 
@@ -109,7 +119,8 @@ fun HomeScreen(
         }
     ) { innerPadding ->
         HomeBody(
-            uiState.imgSource,
+            imgSource = uiState.imgSource,
+            tagsList = uiState.exifTags.toList(),
             modifier = Modifier.padding(innerPadding)
         )
     }
@@ -118,6 +129,7 @@ fun HomeScreen(
 @Composable
 fun HomeBody(
     imgSource: Uri?,
+    tagsList: List<Pair<String, String>>,
     modifier: Modifier = Modifier,
 ) {
     if (imgSource == null) {
@@ -146,13 +158,23 @@ fun HomeBody(
                     .weight(1f, false)
                     .background(color = Color.LightGray, RectangleShape)
             )
-            Column(
+            LazyColumn(
+                contentPadding = PaddingValues(8.0.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f, true)
-                    .background(color = Color.Cyan, RectangleShape)
             ) {
-
+                items(items = tagsList) {
+                    Row() {
+                        Text(
+                            text = it.first,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(8.0.dp))
+                        Text(text = it.second)
+                    }
+                }
             }
         }
     }
@@ -161,5 +183,5 @@ fun HomeBody(
 @Preview
 @Composable
 fun PreviewBody() {
-    HomeBody(imgSource = Uri.EMPTY)
+    HomeBody(imgSource = Uri.EMPTY, listOf())
 }
