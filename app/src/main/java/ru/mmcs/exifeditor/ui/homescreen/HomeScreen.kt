@@ -74,13 +74,11 @@ fun HomeScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    val currentContext = LocalContext.current
-
     val imgProviderLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia()) { target ->
             target?.let {
                 viewModel.onImageChosen(it)
-                viewModel.updateExifData(currentContext.contentResolver.openInputStream(it))
+                viewModel.updateExifData()
             }
         }
 

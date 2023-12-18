@@ -24,7 +24,7 @@ object ExifEditorDestination : NavigationDestination {
     override val route = "editor"
     override val titleResourceId: Int = R.string.edit_tags
     val uriArg = "uri"
-    val fullRoute = "$route/$uriArg"
+    val fullRoute = "$route/{$uriArg}"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
