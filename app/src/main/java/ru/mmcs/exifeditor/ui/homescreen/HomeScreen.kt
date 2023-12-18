@@ -106,7 +106,7 @@ fun HomeScreen(
         floatingActionButton = {
             if (uiState.imgSource != null) {
                 FloatingActionButton(onClick = {
-                    navigateToEditor(Uri.encode(uiState.imgSource!!.path))
+                    navigateToEditor(Uri.encode(uiState.imgSource!!.toString()))
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Edit,

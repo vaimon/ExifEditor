@@ -5,4 +5,6 @@ import android.net.Uri
 
 interface ExifRepository {
     suspend fun getExifData(uri: Uri) : Map<String, String>
+
+    suspend fun getEditableTags(uri: Uri) : Map<String, String>
 }

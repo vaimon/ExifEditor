@@ -8,14 +8,31 @@ import kotlinx.coroutines.withContext
 
 class ExifDataRepository(val applicationContext: Context) : ExifRepository {
     override suspend fun getExifData(uri: Uri) : Map<String, String> {
+        return getExifData(uri, EXIF_TAGS)
+    }
+
+    override suspend fun getEditableTags(uri: Uri): Map<String, String> {
+        return getExifData(uri, arrayOf(
+            ExifInterface.TAG_DATETIME,
+            ExifInterface.TAG_MAKE,
+            ExifInterface.TAG_MODEL
+        ))
+    }
+
+    private suspend fun getExifData(uri: Uri, requiredTags: Array<String>) : Map<String, String>{
         val input = applicationContext.contentResolver.openInputStream(uri)
         val exifInterface = ExifInterface(input!!)
         val exifData = mutableMapOf<String,String>()
-        EXIF_TAGS.forEach { tag ->
+        exifInterface.latLong?.let{
+            exifData["Latitude"] = it[0].toString()
+            exifData["Longitude"] = it[1].toString()
+        }
+        requiredTags.forEach { tag ->
             exifInterface.getAttribute(tag)?.let{
-                exifData.put(tag, it)
+                exifData[tag] = it
             }
         }
+
         withContext(Dispatchers.IO) {
             input.close()
         }
@@ -24,6 +41,9 @@ class ExifDataRepository(val applicationContext: Context) : ExifRepository {
 
     companion object{
         private val EXIF_TAGS = arrayOf(
+            ExifInterface.TAG_DATETIME,
+            ExifInterface.TAG_MAKE,
+            ExifInterface.TAG_MODEL,
             ExifInterface.TAG_APERTURE_VALUE,
             ExifInterface.TAG_BRIGHTNESS_VALUE,
             ExifInterface.TAG_CAMERA_OWNER_NAME,
@@ -31,16 +51,12 @@ class ExifDataRepository(val applicationContext: Context) : ExifRepository {
             ExifInterface.TAG_BITS_PER_SAMPLE,
             ExifInterface.TAG_COLOR_SPACE,
             ExifInterface.TAG_CONTRAST,
-            ExifInterface.TAG_DATETIME,
             ExifInterface.TAG_DIGITAL_ZOOM_RATIO,
             ExifInterface.TAG_EXPOSURE_TIME,
             ExifInterface.TAG_FLASH,
             ExifInterface.TAG_FLASH_ENERGY,
             ExifInterface.TAG_FOCAL_LENGTH,
             ExifInterface.TAG_F_NUMBER,
-            ExifInterface.TAG_GPS_ALTITUDE,
-            ExifInterface.TAG_GPS_LATITUDE,
-            ExifInterface.TAG_GPS_LONGITUDE,
             ExifInterface.TAG_IMAGE_LENGTH,
             ExifInterface.TAG_IMAGE_WIDTH,
             ExifInterface.TAG_IMAGE_UNIQUE_ID,
@@ -49,9 +65,7 @@ class ExifDataRepository(val applicationContext: Context) : ExifRepository {
             ExifInterface.TAG_LENS_MODEL,
             ExifInterface.TAG_LENS_SPECIFICATION,
             ExifInterface.TAG_LIGHT_SOURCE,
-            ExifInterface.TAG_MAKE,
             ExifInterface.TAG_MAKER_NOTE,
-            ExifInterface.TAG_MODEL,
             ExifInterface.TAG_ORIENTATION,
             ExifInterface.TAG_SATURATION,
             ExifInterface.TAG_SHARPNESS,
