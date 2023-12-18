@@ -10,4 +10,7 @@
     <string name="device_brand">Device brand</string>
     <string name="device_model">Device model</string>
     <string name="date_time"><![CDATA[Date & time]]></string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="next">Next</string>
 </resources>
