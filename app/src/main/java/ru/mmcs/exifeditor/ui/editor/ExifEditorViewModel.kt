@@ -15,7 +15,7 @@ class ExifEditorViewModel(
     savedStateHandle: SavedStateHandle,
     private val exifRepository: ExifRepository
 ) : ViewModel() {
-    val imageUri: Uri = Uri.parse(savedStateHandle[ExifEditorDestination.uriArg]!!)
+    private val imageUri: Uri = Uri.parse(savedStateHandle[ExifEditorDestination.uriArg]!!)
 
     val uiState = mutableStateOf(UiState())
 
@@ -47,6 +47,12 @@ class ExifEditorViewModel(
         }
     }
 
+    fun saveTagsToFile(){
+        viewModelScope.launch {
+            exifRepository.saveExifData(imageUri, uiState.value.toMap())
+        }
+    }
+
 
     data class UiState(
         val creationDate: String = "",
@@ -59,10 +65,20 @@ class ExifEditorViewModel(
 
 fun Map<String, String>.toUiState() : ExifEditorViewModel.UiState{
     return ExifEditorViewModel.UiState(
-        this[ExifInterface.TAG_DATETIME] ?: "",
-        this["Latitude"] ?: "",
-        this["Longitude"] ?: "",
-        this[ExifInterface.TAG_MAKE] ?: "",
-        this[ExifInterface.TAG_MODEL] ?: ""
+        this[ExifRepository.TAG_DATETIME] ?: "",
+        this[ExifRepository.TAG_LATITUDE] ?: "",
+        this[ExifRepository.TAG_LONGITUDE] ?: "",
+        this[ExifRepository.TAG_MAKE] ?: "",
+        this[ExifRepository.TAG_MODEL] ?: ""
+    )
+}
+
+fun ExifEditorViewModel.UiState.toMap() : Map<String, String>{
+    return mapOf(
+        ExifRepository.TAG_DATETIME to creationDate,
+        ExifRepository.TAG_MAKE to deviceManufacturer,
+        ExifRepository.TAG_MODEL to deviceModel,
+        ExifRepository.TAG_LATITUDE to latitude,
+        ExifRepository.TAG_LONGITUDE to longitude
     )
 }

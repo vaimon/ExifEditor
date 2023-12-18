@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
@@ -73,18 +74,19 @@ fun ExifEditorScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back_button)
                         )
                     }
                 },
                 actions = {
                     IconButton(onClick = {
-                        onNavigateUp()
+                        viewModel.saveTagsToFile()
+                        navigateBack()
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Check,
-                            contentDescription = stringResource(R.string.back_button)
+                            contentDescription = stringResource(R.string.save)
                         )
                     }
                 }
@@ -257,7 +259,8 @@ fun TagDatePicker(
                         onClick = {
                             pickerStatus = PickerStatus.TimeSelection
                         },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
                             .padding(bottom = 8.dp)
                     ) {
                         Text(stringResource(R.string.next))
@@ -274,7 +277,8 @@ fun TagDatePicker(
                                 }.time))
                             }
                         },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
                             .padding(bottom = 8.dp)
                     ) {
                         Text(stringResource(R.string.confirm))

@@ -2,9 +2,17 @@ package ru.mmcs.exifeditor.data
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.system.OsConstants
 import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
 
 class ExifDataRepository(val applicationContext: Context) : ExifRepository {
     override suspend fun getExifData(uri: Uri) : Map<String, String> {
@@ -17,6 +25,41 @@ class ExifDataRepository(val applicationContext: Context) : ExifRepository {
             ExifInterface.TAG_MAKE,
             ExifInterface.TAG_MODEL
         ))
+    }
+
+    override suspend fun saveExifData(uri: Uri, tags: Map<String, String>){
+        val input = applicationContext.contentResolver.openInputStream(uri)
+        val exifInterface = ExifInterface(input!!)
+
+        exifInterface.setAttribute(ExifRepository.TAG_MAKE, tags[ExifRepository.TAG_MAKE])
+        exifInterface.setAttribute(ExifRepository.TAG_MODEL, tags[ExifRepository.TAG_MODEL])
+        exifInterface.setAttribute(ExifRepository.TAG_DATETIME, tags[ExifRepository.TAG_DATETIME])
+        tags[ExifRepository.TAG_LATITUDE]?.toDoubleOrNull()?.let{ lat ->
+            tags[ExifRepository.TAG_LONGITUDE]?.toDoubleOrNull()?.let{ long ->
+                exifInterface.setLatLong(lat, long)
+            }
+        }
+        // That's a HUGE crutch
+        var tempFileName = ""
+        try{
+            exifInterface.saveAttributes()
+        } catch (e: IOException){
+            tempFileName = e.message!!.split("/").last()
+        }
+
+        withContext(Dispatchers.IO) {
+            input.close()
+        }
+
+        val tempInputStream = File(applicationContext.cacheDir, tempFileName).inputStream()
+        val targetOutputStream = applicationContext.contentResolver.openOutputStream(uri)
+
+        tempInputStream.copyTo(targetOutputStream!!)
+
+        withContext(Dispatchers.IO) {
+            tempInputStream.close()
+            targetOutputStream.close()
+        }
     }
 
     private suspend fun getExifData(uri: Uri, requiredTags: Array<String>) : Map<String, String>{

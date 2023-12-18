@@ -1,5 +1,6 @@
 package ru.mmcs.exifeditor.ui.homescreen
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -35,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,6 +57,7 @@ import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.launch
 import ru.mmcs.exifeditor.R
 import ru.mmcs.exifeditor.ViewModelProvider
 import ru.mmcs.exifeditor.navigation.NavigationDestination
@@ -65,6 +68,14 @@ object HomeDestination : NavigationDestination {
     override val titleResourceId: Int = R.string.app_name
 }
 
+//class PickVisualEditableMedia() : ActivityResultContracts.PickVisualMedia(){
+//    override fun createIntent(context: Context, input: PickVisualMediaRequest): Intent {
+//        val intent = super.createIntent(context, input)
+//        intent.addCategory(Intent.CATEGORY_OPENABLE)
+//        return intent
+//    }
+//}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -74,13 +85,25 @@ fun HomeScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
+    val intent = remember {
+        Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }
+    }
     val imgProviderLauncher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia()) { target ->
-            target?.let {
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
+            result.data?.data?.let {
                 viewModel.onImageChosen(it)
                 viewModel.updateExifData()
             }
         }
+//        rememberLauncherForActivityResult(contract = PickVisualEditableMedia()) { target ->
+//            target?.let {
+//                viewModel.onImageChosen(it)
+//                viewModel.updateExifData()
+//            }
+//        }
 
     val uiState: HomeViewModel.UiState by viewModel.uiState
 
@@ -93,7 +116,8 @@ fun HomeScreen(
                 scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(onClick = {
-                        imgProviderLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+//                        imgProviderLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        imgProviderLauncher.launch(intent)
                     }) {
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.upload),
