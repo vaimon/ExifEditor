@@ -2,4 +2,7 @@
     <string name="app_name">ExifEditor</string>
     <string name="edit_tags">Edit tags</string>
     <string name="back_button">Back</string>
+    <string name="edit">Edit</string>
+    <string name="upload">Upload</string>
+    <string name="image">Image</string>
 </resources>
