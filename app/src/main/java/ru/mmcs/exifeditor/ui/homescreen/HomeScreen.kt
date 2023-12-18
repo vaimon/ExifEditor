@@ -68,7 +68,7 @@ object HomeDestination : NavigationDestination {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    navigateToEditor: () -> Unit,
+    navigateToEditor: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(factory = ViewModelProvider.Factory)
 ) {
@@ -108,7 +108,7 @@ fun HomeScreen(
         floatingActionButton = {
             if (uiState.imgSource != null) {
                 FloatingActionButton(onClick = {
-                    TODO()
+                    navigateToEditor(Uri.encode(uiState.imgSource!!.path))
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Edit,

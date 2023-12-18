@@ -13,7 +13,9 @@ object ViewModelProvider {
         }
 
         initializer {
-            ExifEditorViewModel()
+            ExifEditorViewModel(
+                this.createSavedStateHandle(),
+            )
         }
     }
 }

@@ -3,6 +3,7 @@ package ru.mmcs.exifeditor.ui.editor
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,6 +23,8 @@ import ru.mmcs.exifeditor.ui.homescreen.HomeViewModel
 object ExifEditorDestination : NavigationDestination {
     override val route = "editor"
     override val titleResourceId: Int = R.string.edit_tags
+    val uriArg = "uri"
+    val fullRoute = "$route/$uriArg"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,6 +46,16 @@ fun ExifEditorScreen(
                             contentDescription = stringResource(R.string.back_button)
                         )
                     }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        onNavigateUp()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = stringResource(R.string.back_button)
+                        )
+                    }
                 }
             )
         },
@@ -58,5 +71,4 @@ fun ExifEditorScreen(
 fun EditorBody(
     modifier: Modifier
 ) {
-    TODO("Not yet implemented")
 }
