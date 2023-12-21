@@ -3,7 +3,9 @@ package ru.mmcs.exifeditor.data
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.provider.MediaStore
 import android.system.OsConstants
+import android.util.Log
 import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,65 +15,56 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.UUID
 
 class ExifDataRepository(val applicationContext: Context) : ExifRepository {
-    override suspend fun getExifData(uri: Uri) : Map<String, String> {
+    override suspend fun getExifData(uri: Uri): Map<String, String> {
         return getExifData(uri, EXIF_TAGS)
     }
 
     override suspend fun getEditableTags(uri: Uri): Map<String, String> {
-        return getExifData(uri, arrayOf(
-            ExifInterface.TAG_DATETIME,
-            ExifInterface.TAG_MAKE,
-            ExifInterface.TAG_MODEL
-        ))
+        return getExifData(
+            uri, arrayOf(
+                ExifInterface.TAG_DATETIME,
+                ExifInterface.TAG_MAKE,
+                ExifInterface.TAG_MODEL
+            )
+        )
     }
 
-    override suspend fun saveExifData(uri: Uri, tags: Map<String, String>){
-        val input = applicationContext.contentResolver.openInputStream(uri)
-        val exifInterface = ExifInterface(input!!)
+    override suspend fun saveExifData(uri: Uri, tags: Map<String, String>) {
+        val mediaUri = MediaStore.getMediaUri(applicationContext, uri)
 
+        val tempInputOutput = applicationContext.contentResolver.openFileDescriptor(mediaUri!!, "rw", null)!!
+
+        val exifInterface = ExifInterface(tempInputOutput.fileDescriptor)
         exifInterface.setAttribute(ExifRepository.TAG_MAKE, tags[ExifRepository.TAG_MAKE])
         exifInterface.setAttribute(ExifRepository.TAG_MODEL, tags[ExifRepository.TAG_MODEL])
         exifInterface.setAttribute(ExifRepository.TAG_DATETIME, tags[ExifRepository.TAG_DATETIME])
-        tags[ExifRepository.TAG_LATITUDE]?.toDoubleOrNull()?.let{ lat ->
-            tags[ExifRepository.TAG_LONGITUDE]?.toDoubleOrNull()?.let{ long ->
+        tags[ExifRepository.TAG_LATITUDE]?.toDoubleOrNull()?.let { lat ->
+            tags[ExifRepository.TAG_LONGITUDE]?.toDoubleOrNull()?.let { long ->
                 exifInterface.setLatLong(lat, long)
             }
         }
-        // That's a HUGE crutch
-        var tempFileName = ""
-        try{
-            exifInterface.saveAttributes()
-        } catch (e: IOException){
-            tempFileName = e.message!!.split("/").last()
-        }
+
+        exifInterface.saveAttributes()
+        Log.d("DEBUG", "ExifInterface saved tags successfully")
 
         withContext(Dispatchers.IO) {
-            input.close()
-        }
-
-        val tempInputStream = File(applicationContext.cacheDir, tempFileName).inputStream()
-        val targetOutputStream = applicationContext.contentResolver.openOutputStream(uri)
-
-        tempInputStream.copyTo(targetOutputStream!!)
-
-        withContext(Dispatchers.IO) {
-            tempInputStream.close()
-            targetOutputStream.close()
+            tempInputOutput.close()
         }
     }
 
-    private suspend fun getExifData(uri: Uri, requiredTags: Array<String>) : Map<String, String>{
+    private suspend fun getExifData(uri: Uri, requiredTags: Array<String>): Map<String, String> {
         val input = applicationContext.contentResolver.openInputStream(uri)
         val exifInterface = ExifInterface(input!!)
-        val exifData = mutableMapOf<String,String>()
-        exifInterface.latLong?.let{
+        val exifData = mutableMapOf<String, String>()
+        exifInterface.latLong?.let {
             exifData["Latitude"] = it[0].toString()
             exifData["Longitude"] = it[1].toString()
         }
         requiredTags.forEach { tag ->
-            exifInterface.getAttribute(tag)?.let{
+            exifInterface.getAttribute(tag)?.let {
                 exifData[tag] = it
             }
         }
@@ -82,7 +75,7 @@ class ExifDataRepository(val applicationContext: Context) : ExifRepository {
         return exifData
     }
 
-    companion object{
+    companion object {
         private val EXIF_TAGS = arrayOf(
             ExifInterface.TAG_DATETIME,
             ExifInterface.TAG_MAKE,
