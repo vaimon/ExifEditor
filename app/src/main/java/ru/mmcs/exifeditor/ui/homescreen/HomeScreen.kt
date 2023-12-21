@@ -3,6 +3,7 @@ package ru.mmcs.exifeditor.ui.homescreen
 import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -28,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -37,6 +39,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,20 +51,13 @@ import coil.compose.AsyncImage
 import ru.mmcs.exifeditor.R
 import ru.mmcs.exifeditor.ViewModelProvider
 import ru.mmcs.exifeditor.navigation.NavigationDestination
+import ru.mmcs.exifeditor.utils.composables.observeLifecycle
 
 
 object HomeDestination : NavigationDestination {
     override val route = "home"
     override val titleResourceId: Int = R.string.app_name
 }
-
-//class PickVisualEditableMedia() : ActivityResultContracts.PickVisualMedia(){
-//    override fun createIntent(context: Context, input: PickVisualMediaRequest): Intent {
-//        val intent = super.createIntent(context, input)
-//        intent.addCategory(Intent.CATEGORY_OPENABLE)
-//        return intent
-//    }
-//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +66,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(factory = ViewModelProvider.Factory)
 ) {
+    viewModel.observeLifecycle(LocalLifecycleOwner.current.lifecycle)
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val intent = remember {
@@ -86,12 +84,6 @@ fun HomeScreen(
                 viewModel.updateExifData()
             }
         }
-//        rememberLauncherForActivityResult(contract = PickVisualEditableMedia()) { target ->
-//            target?.let {
-//                viewModel.onImageChosen(it)
-//                viewModel.updateExifData()
-//            }
-//        }
 
     val uiState: HomeViewModel.UiState by viewModel.uiState
 
@@ -104,7 +96,6 @@ fun HomeScreen(
                 scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(onClick = {
-//                        imgProviderLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                         imgProviderLauncher.launch(intent)
                     }) {
                         Icon(
